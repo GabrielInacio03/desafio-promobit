@@ -2,11 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Models\Product_Tag;
+use App\Models\Tag;
+use App\Repositories\Contracts\ITagRepository;
+use App\Repositories\Contracts\IProductRepository;
+use App\Repositories\Contracts\IProductTagRepository;
 use Illuminate\Http\Request;
 
 class ProductTagController extends Controller
 {
+    public IProductTagRepository $productTag;
+    public IProductRepository $product;
+    public ITagRepository $Tag;
+
+    public function __construct(
+        IProductTagRepository $productTag,
+        IProductRepository $product,
+        ITagRepository $Tag
+    )
+    {
+        $this->productTag = $productTag;
+        $this->product = $product;
+        $this->Tag = $Tag;
+    }
     /**
      * Display a listing of the resource.
      *
@@ -14,7 +33,18 @@ class ProductTagController extends Controller
      */
     public function index()
     {
-        //
+        $products = $this->product->all();
+        $product_tags = $this->productTag->all();
+        $tags = $this->Tag->all();
+        
+
+        return view('/Restrito/vinculado/index')->with(
+            [
+                'products' => $products,
+                'product_tags' => $product_tags,
+                'tags' => $tags
+            ]
+        ); 
     }
 
     /**
@@ -24,7 +54,18 @@ class ProductTagController extends Controller
      */
     public function create()
     {
-        //
+        $products = $this->product->all();
+        $product_tags = $this->productTag->all();
+        $tags = $this->Tag->all();
+        
+
+        return view('/Restrito/vinculado/create')->with(
+            [
+                'products' => $products,
+                'product_tags' => $product_tags,
+                'tags' => $tags
+            ]
+        ); 
     }
 
     /**
@@ -35,18 +76,25 @@ class ProductTagController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        $pts = $this->productTag->all();
 
+        $validacao = new Product_Tag();
+        $validacao->product_id = $request->dllprodutos;        
+        $validacao->tag_id = $request->dlltags; 
+      
+        $this->productTag->store($validacao);
+        return redirect('/Restrito/vinculado')->with('success', 'Vínculo criado com sucesso');        
+    }
+    
     /**
      * Display the specified resource.
      *
      * @param  \App\Models\Product_Tag  $product_Tag
      * @return \Illuminate\Http\Response
      */
-    public function show(Product_Tag $product_Tag)
+    public function show()
     {
-        //
+     
     }
 
     /**
@@ -55,9 +103,21 @@ class ProductTagController extends Controller
      * @param  \App\Models\Product_Tag  $product_Tag
      * @return \Illuminate\Http\Response
      */
-    public function edit(Product_Tag $product_Tag)
+    public function edit($id)
     {
-        //
+        $product_tags = $this->productTag->getById($id);
+
+        $products = $this->product->all();
+        $tags = $this->Tag->all();
+        
+
+        return view('/Restrito/vinculado/edit')->with(
+            [
+                'products' => $products,
+                'product_tags' => $product_tags,
+                'tags' => $tags
+            ]
+        ); 
     }
 
     /**
@@ -67,9 +127,16 @@ class ProductTagController extends Controller
      * @param  \App\Models\Product_Tag  $product_Tag
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Product_Tag $product_Tag)
+    public function update(Request $request, $id)
     {
-        //
+
+        $validacao = $this->productTag->getById($id);
+        $validacao->product_id = $request->dllprodutos;        
+        $validacao->tag_id = $request->dlltags; 
+
+        $this->productTag->update($validacao);
+        return redirect('/Restrito/vinculado')->with('success', 'Vínculo editado com sucesso');
+
     }
 
     /**
@@ -78,8 +145,10 @@ class ProductTagController extends Controller
      * @param  \App\Models\Product_Tag  $product_Tag
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Product_Tag $product_Tag)
+    public function destroy($id)
     {
-        //
+        $pt = $this->productTag->getById($id);;
+        $this->productTag->delete($pt);
+        return redirect('/Restrito/vinculado')->with('success', 'Vínculo excluido com sucesso');  
     }
 }
